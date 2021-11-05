@@ -1,4 +1,4 @@
-/**
+/****
  * common.h
  *
  * Copyright 2021 mikee47 <mike@sillyhouse.net>
@@ -19,6 +19,9 @@
 
 #pragma once
 
+/**
+ * @brief Device may be configured to output CO2 PPM values in various ranges
+ */
 enum class DetectionRange {
 	PPM_2000 = 2000,
 	PPM_5000 = 5000,

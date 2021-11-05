@@ -1,4 +1,4 @@
-/**
+/****
  * PwmReader.h
  *
  * Copyright 2021 mikee47 <mike@sillyhouse.net>
@@ -27,10 +27,19 @@ namespace MHZ19
 {
 /**
  * @brief Reads input pulse width asynchronously
+ *
+ * The ESP8266 lacks any timing capture hardware but as the pulse output
+ * from the MHZ19 is very slow it can be decoded using interrupts with high accuracy.
+ *
+ * Once started, the PwmReader runs continuously and the last value can be obtained
+ * by calling `getMeasurement`.
  */
 class PwmReader
 {
 public:
+	/**
+	 * @brief Used internally to measure a high/low pulse pair
+	 */
 	union Pulse {
 		struct {
 			uint16_t low;
@@ -44,10 +53,23 @@ public:
 		end();
 	}
 
+	/**
+	 * @brief Start the PWM reader
+	 * @param pin GPIO to read PWM signal on
+	 * @param range Configured device range
+	 *
+	 * Runs continuously in background until end() is called.
+	 */
 	void begin(uint8_t pin, DetectionRange range = DetectionRange::PPM_2000);
 
+	/**
+	 * @brief Stop the PWM reader.
+	 */
 	void end();
 
+	/**
+	 * @brief Obtain the most recent measurement.
+	 */
 	uint16_t getMeasurement() const;
 
 private:
@@ -70,6 +92,7 @@ private:
  * @brief Read PWM output from sensor
  * @param pwmPin GPIO to which the sensor is connected
  * @param range Range sensor is configured for
+ * @note This will hang CPU for 1-2 seconds. Use PwmReader instead.
  */
 unsigned pwmRead(uint8_t pwmPin, DetectionRange range = DetectionRange::PPM_2000);
 

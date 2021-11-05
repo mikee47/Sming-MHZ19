@@ -1,5 +1,5 @@
-/**
- * MHZ19.cpp
+/****
+ * Uart.h
  *
  * Copyright 2021 mikee47 <mike@sillyhouse.net>
  *
@@ -69,11 +69,15 @@ struct Measurement {
 
 using MeasurementCallback = Delegate<void(Measurement& m)>;
 
+/**
+ * @brief Access MHZ19 sensor via serial port
+ */
 class Uart
 {
 public:
 	/**
 	 * @brief Use device in UART mode
+	 * @param serial Port and pins must be pre-configured
 	 */
 	Uart(HardwareSerial& serial) : serial(serial)
 	{

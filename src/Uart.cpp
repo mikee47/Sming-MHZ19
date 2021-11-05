@@ -1,5 +1,5 @@
-/**
- * MHZ19.cpp
+/****
+ * Uart.cpp
  *
  * Copyright 2021 mikee47 <mike@sillyhouse.net>
  *
@@ -17,7 +17,7 @@
  *
  ****/
 
-#include "MHZ19.h"
+#include "include/MHZ19/Uart.h"
 #include <Digital.h>
 #include <numeric>
 
