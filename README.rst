@@ -38,6 +38,13 @@ Note: This approach is also used for I2S, see :library:`ToneGenerator`.
 References
 ----------
 
-- `MH-Z19 datasheet <http://www.winsen-sensor.com/d/files/PDF/Infrared%20Gas%20Sensor/NDIR%20CO2%20SENSOR/MH-Z19%20CO2%20Ver1.0.pdf>__`
+- `MH-Z19 datasheet <http://www.winsen-sensor.com/d/files/PDF/Infrared%20Gas%20Sensor/NDIR%20CO2%20SENSOR/MH-Z19%20CO2%20Ver1.0.pdf>`__
 - `MH-Z19B datasheet <https://www.winsen-sensor.com/d/files/MH-Z19B.pdf>`__
 - `MH-Z19C datasheet <https://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19c-pins-type-co2-manual-ver1_0.pdf>`__
+
+
+API Documentation
+-----------------
+
+.. doxygennamespace:: MHZ19
+   :methods:
