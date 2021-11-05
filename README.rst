@@ -5,8 +5,13 @@ Sming library supporting the MH-Z19 and MH-Z19B CO2 sensors.
 
 Essentially a re-write of https://github.com/crisap94/MHZ19 to use Hardware serial port with callbacks.
 
-Note that :cpp:func:`MHZ19::pwmRead` is not yet asynchronous.
-This will be fixed in a future revision.
+Functionality is split into two main classes:
+
+:cpp:class:`MHZ19::Uart`
+   Access the sensor via serial port
+
+:cpp:class:`MHZ19::PwmReader`
+   Asynchronously decodes PWM signal from sensor
 
 
 ESP8266 Connections
@@ -38,6 +43,13 @@ Note: This approach is also used for I2S, see :library:`ToneGenerator`.
 References
 ----------
 
-- `MH-Z19 datasheet <http://www.winsen-sensor.com/d/files/PDF/Infrared%20Gas%20Sensor/NDIR%20CO2%20SENSOR/MH-Z19%20CO2%20Ver1.0.pdf>__`
+- `MH-Z19 datasheet <http://www.winsen-sensor.com/d/files/PDF/Infrared%20Gas%20Sensor/NDIR%20CO2%20SENSOR/MH-Z19%20CO2%20Ver1.0.pdf>`__
 - `MH-Z19B datasheet <https://www.winsen-sensor.com/d/files/MH-Z19B.pdf>`__
 - `MH-Z19C datasheet <https://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19c-pins-type-co2-manual-ver1_0.pdf>`__
+
+
+API Documentation
+-----------------
+
+.. doxygennamespace:: MHZ19
+   :members:

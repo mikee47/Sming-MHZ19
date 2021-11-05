@@ -1,14 +1,27 @@
-/*
-  MHZ19.h - MH-Z19 CO2 sensor library for ESP-WROOM-02/32(ESP8266/ESP32) or Arduino
-  version 1.0
-  
-  License MIT
-*/
+/****
+ * Uart.h
+ *
+ * Copyright 2021 mikee47 <mike@sillyhouse.net>
+ *
+ * This file is part of the Sming-MHZ19 Library
+ *
+ * This library is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU General Public License as published by the Free Software Foundation, version 3 or later.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this library.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ ****/
 
 #pragma once
 
 #include <HardwareSerial.h>
 #include <SimpleTimer.h>
+#include "common.h"
 
 namespace MHZ19
 {
@@ -47,12 +60,6 @@ enum class Error {
 	timeout,
 };
 
-enum class DetectionRange {
-	PPM_2000 = 2000,
-	PPM_5000 = 5000,
-	PPM_10000 = 10000,
-};
-
 struct Measurement {
 	Error error;
 	uint8_t status;
@@ -62,11 +69,15 @@ struct Measurement {
 
 using MeasurementCallback = Delegate<void(Measurement& m)>;
 
+/**
+ * @brief Access MHZ19 sensor via serial port
+ */
 class Uart
 {
 public:
 	/**
 	 * @brief Use device in UART mode
+	 * @param serial Port and pins must be pre-configured
 	 */
 	Uart(HardwareSerial& serial) : serial(serial)
 	{
@@ -139,13 +150,6 @@ private:
 	SimpleTimer timer;
 	MeasurementCallback callback;
 };
-
-/**
- * @brief Read PWM output from sensor
- * @param pwmPin GPIO to which the sensor is connected
- * @param range Range sensor is configured for
- */
-unsigned pwmRead(uint8_t pwmPin, DetectionRange range = DetectionRange::PPM_2000);
 
 } // namespace MHZ19
 

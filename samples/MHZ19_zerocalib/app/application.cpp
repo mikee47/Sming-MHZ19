@@ -44,7 +44,7 @@ void calibrate()
 	case State::readPwm:
 		// Read PWM input once per minute
 		if(tickCount % 60 == 0) {
-			auto ppm = MHZ19::pwmRead(PWM_PIN);
+			auto ppm = pwmReader.getMeasurement();
 			Serial.print("\r#");
 			Serial.print(tickCount / 60);
 			Serial.print(": co2 = ");
@@ -107,7 +107,7 @@ void calibrate()
 
 void init()
 {
-	initSerial();
+	initHardware();
 
 	Serial.println(_F("Note: Sensor requires 3 minutes to warm up."));
 

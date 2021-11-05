@@ -1,21 +1,28 @@
-/*
-  MHZ19.cpp - MH-Z19 CO2 sensor library for ESP8266 or Arduino
-  version 1.0
-  
-  License MIT
-*/
+/****
+ * Uart.cpp
+ *
+ * Copyright 2021 mikee47 <mike@sillyhouse.net>
+ *
+ * This file is part of the Sming-MHZ19 Library
+ *
+ * This library is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU General Public License as published by the Free Software Foundation, version 3 or later.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this library.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ ****/
 
-#include "MHZ19.h"
+#include "include/MHZ19/Uart.h"
 #include <Digital.h>
 #include <numeric>
 
 #define START 0xff
 #define UART_TIMEOUT_MS 500
-#define PWM_CYCLE_MS 1004
-
-#ifdef ARCH_HOST
-#include <DigitalHooks.h>
-#endif
 
 String toString(MHZ19::Error error)
 {
@@ -34,39 +41,10 @@ String toString(MHZ19::Error error)
 	}
 }
 
+namespace MHZ19
+{
 namespace
 {
-#ifdef ARCH_HOST
-class Hooks : public DigitalHooks
-{
-public:
-	/*
-	 * From datasheet:
-	 *
-	 *   ppm = 2000 * (Th - 2) / (Th + Tl - 4)
-	 *
-	 * Cycle time is 1004ms so Tl = 1004 - Th:
-	 *
-	 *   ppm = 2000 * (Th - 2) / (Th + 1004 - Th - 4)
-	 *       = 2000 * (Th - 2) / 1000
-	 *       = 2 * (Th - 2)
-	 * 
-	 * Gives:
-	 *
-	 * 		Th = (ppm / 2) + 2
-	 */
-	unsigned long pulseIn(uint16_t pin, uint8_t state, unsigned long timeout) override
-	{
-		auto ppm = 400 + os_random() % (2000 - 400);
-		// Result in microseconds
-		return 1000 * (ppm / 2) + 2;
-	}
-};
-
-Hooks hooks;
-
-#endif
-
 template <typename T> uint8_t calculateChecksum(const T& packet)
 {
 	auto data = &packet.start;
@@ -75,8 +53,6 @@ template <typename T> uint8_t calculateChecksum(const T& packet)
 
 } // namespace
 
-namespace MHZ19
-{
 void Uart::setAutoCalibration(bool enable)
 {
 	Request req{
@@ -207,22 +183,6 @@ bool Uart::getMeasurement(MeasurementCallback callback)
 	};
 	sendRequest(req);
 	return true;
-}
-
-unsigned pwmRead(uint8_t pwmPin, DetectionRange range)
-{
-#ifdef ARCH_HOST
-	setDigitalHooks(&hooks);
-#endif
-	unsigned long ppm{0};
-	unsigned long th = pulseIn(pwmPin, HIGH, 1000 * PWM_CYCLE_MS * 2) / 1000;
-	if(th == 0) {
-		return 0;
-	}
-	unsigned long tl = 1004 - th;
-	ppm = uint32_t(range) * (th - 2) / (th + tl - 4);
-
-	return ppm;
 }
 
 } // namespace MHZ19
