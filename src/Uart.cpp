@@ -19,20 +19,10 @@
 
 #include "MHZ19.h"
 #include <Digital.h>
-#include <Platform/Clocks.h>
-#include <muldiv.h>
 #include <numeric>
 
 #define START 0xff
 #define UART_TIMEOUT_MS 500
-
-// Ignore measurements with cycle times outside (CYCLE_MS +/- TOLERANCE)
-#define PWM_CYCLE_MS 1004
-#define PWM_CYCLE_TOLERANCE 250
-
-#ifdef ARCH_HOST
-#include <DigitalHooks.h>
-#endif
 
 String toString(MHZ19::Error error)
 {
@@ -53,59 +43,12 @@ String toString(MHZ19::Error error)
 
 namespace MHZ19
 {
-// Required by ISR
-PwmReader* PwmReader::self;
-
 namespace
 {
-#ifdef ARCH_HOST
-class Hooks : public DigitalHooks
-{
-public:
-	/*
-	 * From datasheet:
-	 *
-	 *   ppm = 2000 * (Th - 2) / (Th + Tl - 4)
-	 *
-	 * Cycle time is 1004ms so Tl = 1004 - Th:
-	 *
-	 *   ppm = 2000 * (Th - 2) / (Th + 1004 - Th - 4)
-	 *       = 2000 * (Th - 2) / 1000
-	 *       = 2 * (Th - 2)
-	 * 
-	 * Gives:
-	 *
-	 * 		Th = (ppm / 2) + 2
-	 */
-	unsigned long pulseIn(uint16_t pin, uint8_t state, unsigned long timeout) override
-	{
-		auto ppm = 400 + os_random() % (2000 - 400);
-		// Result in microseconds
-		return 1000 * (ppm / 2) + 2;
-	}
-};
-
-Hooks hooks;
-
-#endif
-
 template <typename T> uint8_t calculateChecksum(const T& packet)
 {
 	auto data = &packet.start;
 	return -std::accumulate(&data[1], &data[7], 0);
-}
-
-uint16_t calculatePpm(PwmReader::Pulse pulse, DetectionRange range)
-{
-	auto cycleTime = pulse.low + pulse.high;
-	if(pulse.low <= 2 || pulse.high <= 2 || cycleTime < (PWM_CYCLE_MS - PWM_CYCLE_TOLERANCE) ||
-	   cycleTime > (PWM_CYCLE_MS + PWM_CYCLE_TOLERANCE)) {
-		return 0;
-	}
-	pulse.high -= 2;
-	pulse.low -= 2;
-
-	return muldiv(pulse.high, uint16_t(range), pulse.high + pulse.low);
 }
 
 } // namespace
@@ -240,57 +183,6 @@ bool Uart::getMeasurement(MeasurementCallback callback)
 	};
 	sendRequest(req);
 	return true;
-}
-
-void PwmReader::begin(uint8_t pin, DetectionRange range)
-{
-	this->pin = pin;
-	this->range = range;
-	reading.value = 0;
-	self = this;
-	attachInterrupt(pin, staticInterruptHandler, CHANGE);
-	pinMode(pin, INPUT_PULLUP);
-}
-
-void PwmReader::end()
-{
-	detachInterrupt(pin);
-	reading.value = 0;
-}
-
-void IRAM_ATTR PwmReader::interruptHandler()
-{
-	auto ticks = PolledTimerClock::ticks();
-	auto ms = PolledTimerClock::ticksToTime<NanoTime::Milliseconds>(ticks - isrTicks);
-	isrTicks = ticks;
-	if(digitalRead(pin)) {
-		if(isrPulse.high != 0) {
-			reading.value = isrPulse.value;
-		}
-		isrPulse.low = ms;
-	} else {
-		isrPulse.high = ms;
-	}
-}
-
-uint16_t PwmReader::getMeasurement() const
-{
-	Pulse r{.value = reading.value};
-	auto ppm = calculatePpm(r, range);
-	debug_d("[MHZ19] PWM reading (%u, %u) -> %u ppm", r.high, r.low, ppm);
-	return ppm;
-}
-
-unsigned pwmRead(uint8_t pwmPin, DetectionRange range)
-{
-#ifdef ARCH_HOST
-	setDigitalHooks(&hooks);
-#endif
-
-	PwmReader::Pulse pulse;
-	pulse.high = pulseIn(pwmPin, HIGH, 1000 * PWM_CYCLE_MS * 2) / 1000;
-	pulse.low = 1004 - pulse.high;
-	return calculatePpm(pulse, range);
 }
 
 } // namespace MHZ19
