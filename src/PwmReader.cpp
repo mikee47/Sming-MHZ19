@@ -81,6 +81,14 @@ void PwmReader::end()
 	reading.value = 0;
 }
 
+void __noinline PwmReader::staticCallback(uint32_t value)
+{
+	if(self->callback) {
+		Pulse pulse{.value = value};
+		self->callback(pulse.calculatePpm(self->range));
+	}
+}
+
 void IRAM_ATTR PwmReader::interruptHandler()
 {
 	auto ticks = PolledTimerClock::ticks();
@@ -89,6 +97,9 @@ void IRAM_ATTR PwmReader::interruptHandler()
 	if(digitalRead(pin)) {
 		if(isrPulse.high != 0) {
 			reading.value = isrPulse.value;
+			if(isrPulse.isValid() && callback) {
+				System.queueCallback(staticCallback, isrPulse.value);
+			}
 		}
 		isrPulse.low = ms;
 	} else {

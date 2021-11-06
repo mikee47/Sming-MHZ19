@@ -28,14 +28,10 @@ void takeMeasurement()
 		Serial.println(m.status);
 	});
 
-	auto ppm = pwmReader.getMeasurement();
-	Serial.print(_F("PWM reader says "));
-	Serial.print(ppm);
-	Serial.println(_F("ppm"));
-
-	int co2ppm = MHZ19::pwmRead(PWM_PIN);
-	Serial.print("co2 via PWM: ");
-	Serial.println(co2ppm);
+	/* This method of PWM reading is not recommended */
+	// int co2ppm = MHZ19::pwmRead(PWM_PIN);
+	// Serial.print("co2 via PWM: ");
+	// Serial.println(co2ppm);
 }
 
 } // namespace
@@ -46,6 +42,12 @@ void init()
 
 	mhz19.setAutoCalibration(false);
 	timer.initializeMs<2000>(takeMeasurement).start();
+
+	pwmReader.setCallback([](uint16_t ppm) {
+		Serial.print(_F("PWM reader says "));
+		Serial.print(ppm);
+		Serial.println(_F("ppm"));
+	});
 
 	Serial.println("Note: Sensor requires 3 minutes to warm up.");
 }

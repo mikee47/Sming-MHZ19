@@ -44,6 +44,11 @@ public:
 	static constexpr uint16_t CYCLE_TOLERANCE{250};
 
 	/**
+	 * @brief Callback for regular readings
+	 */
+	using Callback = Delegate<void(uint16_t ppm)>;
+
+	/**
 	 * @brief Used internally to measure a high/low pulse pair
 	 */
 	union Pulse {
@@ -95,6 +100,14 @@ public:
 	 */
 	uint16_t getMeasurement() const;
 
+	/**
+	 * @brief Set a callback to be invoked whenever a valid reading is obtained
+	 */
+	void setCallback(Callback callback)
+	{
+		this->callback = callback;
+	}
+
 private:
 	static void IRAM_ATTR staticInterruptHandler()
 	{
@@ -103,11 +116,14 @@ private:
 
 	void interruptHandler();
 
+	static void staticCallback(uint32_t value);
+
 	static PwmReader* self;
 	uint8_t pin;
 	uint32_t isrTicks{0};
 	Pulse isrPulse{};
 	volatile Pulse reading{};
+	Callback callback;
 	DetectionRange range;
 };
 
