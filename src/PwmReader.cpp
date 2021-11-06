@@ -20,11 +20,6 @@
 #include "include/MHZ19/PwmReader.h"
 #include <Digital.h>
 #include <Platform/Clocks.h>
-#include <muldiv.h>
-
-// Ignore measurements with cycle times outside (CYCLE_MS +/- TOLERANCE)
-#define PWM_CYCLE_MS 1004
-#define PWM_CYCLE_TOLERANCE 250
 
 #ifdef ARCH_HOST
 #include <DigitalHooks.h>
@@ -68,19 +63,6 @@ Hooks hooks;
 
 #endif
 
-uint16_t calculatePpm(PwmReader::Pulse pulse, DetectionRange range)
-{
-	auto cycleTime = pulse.low + pulse.high;
-	if(pulse.low <= 2 || pulse.high <= 2 || cycleTime < (PWM_CYCLE_MS - PWM_CYCLE_TOLERANCE) ||
-	   cycleTime > (PWM_CYCLE_MS + PWM_CYCLE_TOLERANCE)) {
-		return 0;
-	}
-	pulse.high -= 2;
-	pulse.low -= 2;
-
-	return muldiv(pulse.high, uint16_t(range), uint16_t(pulse.high + pulse.low));
-}
-
 } // namespace
 
 void PwmReader::begin(uint8_t pin, DetectionRange range)
@@ -117,7 +99,7 @@ void IRAM_ATTR PwmReader::interruptHandler()
 uint16_t PwmReader::getMeasurement() const
 {
 	Pulse r{.value = reading.value};
-	auto ppm = calculatePpm(r, range);
+	auto ppm = r.calculatePpm(range);
 	debug_d("[MHZ19] PWM reading (%u, %u) -> %u ppm", r.high, r.low, ppm);
 	return ppm;
 }
@@ -129,9 +111,9 @@ unsigned pwmRead(uint8_t pwmPin, DetectionRange range)
 #endif
 
 	PwmReader::Pulse pulse;
-	pulse.high = pulseIn(pwmPin, HIGH, 1000 * PWM_CYCLE_MS * 2) / 1000;
+	pulse.high = pulseIn(pwmPin, HIGH, 1000 * PwmReader::CYCLE_MS * 2) / 1000;
 	pulse.low = 1004 - pulse.high;
-	return calculatePpm(pulse, range);
+	return pulse.calculatePpm(range);
 }
 
 } // namespace MHZ19

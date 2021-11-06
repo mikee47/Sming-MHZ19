@@ -22,6 +22,8 @@
 #include "common.h"
 #include <cstdint>
 #include <esp_attr.h>
+#include <Delegate.h>
+#include <muldiv.h>
 
 namespace MHZ19
 {
@@ -37,6 +39,10 @@ namespace MHZ19
 class PwmReader
 {
 public:
+	// Ignore measurements with cycle times outside (CYCLE_MS +/- TOLERANCE)
+	static constexpr uint16_t CYCLE_MS{1004};
+	static constexpr uint16_t CYCLE_TOLERANCE{250};
+
 	/**
 	 * @brief Used internally to measure a high/low pulse pair
 	 */
@@ -46,6 +52,23 @@ public:
 			uint16_t high;
 		};
 		uint32_t value;
+
+		uint16_t getCycleTime() const
+		{
+			return low + high;
+		}
+
+		bool isValid() const
+		{
+			auto cycleTime = getCycleTime();
+			return low > 2 && high > 2 && cycleTime >= (CYCLE_MS - CYCLE_TOLERANCE) &&
+				   cycleTime <= (CYCLE_MS + CYCLE_TOLERANCE);
+		}
+
+		uint16_t calculatePpm(DetectionRange range)
+		{
+			return isValid() ? muldiv(high, uint16_t(range), getCycleTime()) : 0;
+		}
 	};
 
 	~PwmReader()
