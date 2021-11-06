@@ -68,21 +68,20 @@ Hooks hooks;
 void PwmReader::begin(uint8_t pin, DetectionRange range)
 {
 	end();
+	pinMode(pin, INPUT_PULLUP);
 	this->pin = pin;
 	this->range = range;
-	reading.value = 0;
 	self = this;
-	attachInterrupt(pin, staticInterruptHandler, CHANGE);
-	pinMode(pin, INPUT_PULLUP);
-	state = State::enabled;
+	state = State::suspended;
+	resume();
 }
 
 void PwmReader::end()
 {
-	if(state == State::enabled) {
-		detachInterrupt(pin);
+	if(state == State::disabled) {
+		return;
 	}
-	reading.value = 0;
+	suspend();
 	state = State::disabled;
 }
 
@@ -97,6 +96,11 @@ void __noinline PwmReader::staticCallback(uint32_t value)
 void IRAM_ATTR PwmReader::interruptHandler()
 {
 	auto ticks = PolledTimerClock::ticks();
+	if(isrTicks == 0) {
+		// Just started
+		isrTicks = ticks;
+		return;
+	}
 	auto ms = PolledTimerClock::ticksToTime<NanoTime::Milliseconds>(ticks - isrTicks);
 	isrTicks = ticks;
 	if(digitalRead(pin)) {
@@ -125,6 +129,7 @@ bool PwmReader::suspend()
 	switch(state) {
 	case State::enabled:
 		detachInterrupt(pin);
+		reading.value = 0;
 		state = State::suspended;
 		return true;
 	case State::disabled:
@@ -145,6 +150,7 @@ bool PwmReader::resume()
 	case State::disabled:
 		return false;
 	case State::suspended:
+		isrTicks = 0; // Ask ISR to disregard stale tick value
 		attachInterrupt(pin, staticInterruptHandler, CHANGE);
 		return true;
 	default:
