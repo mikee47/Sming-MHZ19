@@ -67,18 +67,23 @@ Hooks hooks;
 
 void PwmReader::begin(uint8_t pin, DetectionRange range)
 {
+	end();
 	this->pin = pin;
 	this->range = range;
 	reading.value = 0;
 	self = this;
 	attachInterrupt(pin, staticInterruptHandler, CHANGE);
 	pinMode(pin, INPUT_PULLUP);
+	state = State::enabled;
 }
 
 void PwmReader::end()
 {
-	detachInterrupt(pin);
+	if(state == State::enabled) {
+		detachInterrupt(pin);
+	}
 	reading.value = 0;
+	state = State::disabled;
 }
 
 void __noinline PwmReader::staticCallback(uint32_t value)
@@ -113,6 +118,39 @@ uint16_t PwmReader::getMeasurement() const
 	auto ppm = r.calculatePpm(range);
 	debug_d("[MHZ19] PWM reading (%u, %u) -> %u ppm", r.high, r.low, ppm);
 	return ppm;
+}
+
+bool PwmReader::suspend()
+{
+	switch(state) {
+	case State::enabled:
+		detachInterrupt(pin);
+		state = State::suspended;
+		return true;
+	case State::disabled:
+		return false;
+	case State::suspended:
+		return true;
+	default:
+		assert(false);
+		return false;
+	}
+}
+
+bool PwmReader::resume()
+{
+	switch(state) {
+	case State::enabled:
+		return true;
+	case State::disabled:
+		return false;
+	case State::suspended:
+		attachInterrupt(pin, staticInterruptHandler, CHANGE);
+		return true;
+	default:
+		assert(false);
+		return false;
+	}
 }
 
 unsigned pwmRead(uint8_t pwmPin, DetectionRange range)

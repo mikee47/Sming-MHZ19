@@ -108,7 +108,25 @@ public:
 		this->callback = callback;
 	}
 
+	/**
+	 * @brief Temporarily suspend readings and disable interrupts on the PWM pin
+	 * @retval bool true on success, false if reader not initialised
+	 */
+	bool suspend();
+
+	/**
+	 * @brief Resume reading after a call to suspend()
+	 * @retval bool true on success, false if reader not initialised
+	 */
+	bool resume();
+
 private:
+	enum class State {
+		disabled,
+		enabled,
+		suspended,
+	};
+
 	static void IRAM_ATTR staticInterruptHandler()
 	{
 		return self->interruptHandler();
@@ -119,12 +137,13 @@ private:
 	static void staticCallback(uint32_t value);
 
 	static PwmReader* self;
-	uint8_t pin;
 	uint32_t isrTicks{0};
 	Pulse isrPulse{};
 	volatile Pulse reading{};
 	Callback callback;
 	DetectionRange range;
+	uint8_t pin;
+	State state{State::disabled};
 };
 
 /**
