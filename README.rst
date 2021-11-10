@@ -19,25 +19,21 @@ ESP8266 Connections
 
 Communication requires use of UART0, as UART1 is output-only.
 
-The samples in this library reconfigure the default ``Serial`` class to use UART1
-for debug output.
+The samples in this library reconfigure the default ``Serial`` class to use UART1 for debug output.
 
 UART0 is reconfigured to use the alternate pins by calling :cpp:func:`HardwareSerial::swap`.
 Connect as follows:
 
-====     ===========    =======     ===================
-GPIO     Alternate      NodeMCU     Notes
-====     ===========    =======     ===================
-1        TXD0           TX          } Debug serial output
-2        TX1            D4          } Serial1 output
-13       RXD2           D7          Serial input from MHZ19
-15       TXD2           D8          Serial output to MHZ19
-14                      D5          PWM input from MHZ19
-====     ===========    =======     ===================
+============  =============   ===========================
+From          To              Notes
+============  =============   ===========================
+MHZ19 PWM     GPIO14 (D5)
+MHZ19 TX      GPIO13 (D7)     UART0 RX
+MHZ19 RX      GPIO15 (D8)     UART0 TX
+GPIO2 (D4)    GPIO1 (TX)      Route UART1 output to USB
+============  =============   ===========================
 
-Debug output can be restored by connecting a jumper between GPIO #2 and #1.
-
-Note: This approach is also used for I2S, see :library:`ToneGenerator`.
+Note: A similar approach is used for I2S, see :library:`ToneGenerator`.
 
 
 References
