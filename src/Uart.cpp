@@ -48,7 +48,7 @@ namespace
 template <typename T> uint8_t calculateChecksum(const T& packet)
 {
 	auto data = &packet.start;
-	return -std::accumulate(&data[1], &data[7], 0);
+	return -std::accumulate(&data[1], &data[8], 0);
 }
 
 } // namespace
