@@ -150,8 +150,10 @@ bool PwmReader::resume()
 	case State::disabled:
 		return false;
 	case State::suspended:
-		isrTicks = 0; // Ask ISR to disregard stale tick value
+		isrPulse.value = isrTicks = 0; // Ask ISR to disregard stale tick value
 		attachInterrupt(pin, staticInterruptHandler, CHANGE);
+		pinMode(pin, INPUT_PULLUP);
+		state = State::enabled;
 		return true;
 	default:
 		assert(false);
