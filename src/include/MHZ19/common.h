@@ -19,6 +19,8 @@
 
 #pragma once
 
+namespace MHZ19
+{
 /**
  * @brief Device may be configured to output CO2 PPM values in various ranges
  */
@@ -27,3 +29,5 @@ enum class DetectionRange {
 	PPM_5000 = 5000,
 	PPM_10000 = 10000,
 };
+
+} // namespace MHZ19

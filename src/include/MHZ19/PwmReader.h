@@ -88,7 +88,7 @@ public:
 	 *
 	 * Runs continuously in background until end() is called.
 	 */
-	void begin(uint8_t pin, DetectionRange range = DetectionRange::PPM_2000);
+	void begin(uint8_t pin, DetectionRange range);
 
 	/**
 	 * @brief Stop the PWM reader.
@@ -152,6 +152,6 @@ private:
  * @param range Range sensor is configured for
  * @note This will hang CPU for 1-2 seconds. Use PwmReader instead.
  */
-unsigned pwmRead(uint8_t pwmPin, DetectionRange range = DetectionRange::PPM_2000);
+unsigned pwmRead(uint8_t pwmPin, DetectionRange range);
 
 } // namespace MHZ19

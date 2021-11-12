@@ -24,5 +24,12 @@ void initHardware()
 	Serial.begin(SERIAL_BAUD_RATE, SERIAL_8N1, SERIAL_TX_ONLY, SERIAL_TX_PIN);
 	Serial.systemDebugOutput(true);
 
-	pwmReader.begin(PWM_PIN);
+	/**
+	 * @brief MH-Z19 devices work best at 2000 PPM range.
+	 * Above this the accuracy drops off.
+	 */
+	auto range = MHZ19::DetectionRange::PPM_2000;
+
+	mhz19.setDetectionRange(range);
+	pwmReader.begin(PWM_PIN, range);
 }

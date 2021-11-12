@@ -5,6 +5,8 @@ Sming library supporting the MH-Z19 and MH-Z19B CO2 sensors.
 
 Essentially a re-write of https://github.com/crisap94/MHZ19 to use Hardware serial port with callbacks.
 
+See https://github.com/WifWaf/MH-Z19 for some very detailed and helpful background to the device.
+
 Functionality is split into two main classes:
 
 :cpp:class:`MHZ19::Uart`
