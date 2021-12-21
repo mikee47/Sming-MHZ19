@@ -1,4 +1,4 @@
-MZH19 Span-calibration
+MHZ19 Span-calibration
 ======================
 
 Example demonstrating span-calibration procedure.
